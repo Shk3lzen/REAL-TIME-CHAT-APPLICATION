@@ -16,7 +16,7 @@ function init(io, redis) {
             }
 
             socket.join(room);
-
+            io.emit('updateUsers', await redisHandler.getUsers());
             const messages = await redisHandler.getMessages(room, 1);
             messages.reverse().forEach(msg => socket.emit('message', msg));
 
@@ -29,13 +29,21 @@ function init(io, redis) {
         });
 
         socket.on('loadMessages', async ({ room, page }) => {
-            const messages = await redisHandler.getMessages(room, page);
-            socket.emit('olderMessages', messages.reverse());
+            try {
+                const messages = await redisHandler.getMessages(room, page);
+                console.log("Fetched messages from Redis:", messages); // Add a debug log
+                socket.emit('olderMessages', messages.reverse());
+            } catch (error) {
+                console.error('Error loading messages:', error);
+            }
         });
-
         socket.on('requestPrivateRoom', async ({ username, targetUser }) => {
             const privateRoom = [username, targetUser].sort().join('_');
-
+            const roomExists = await redisHandler.roomExists(privateRoom); // Assuming this method exists
+            if (!roomExists) {
+                await redisHandler.createRoom(privateRoom); // Create the room in your data store
+            }
+        
             socket.join(privateRoom);
             if (users[targetUser]) {
                 io.to(users[targetUser]).emit('privateRoomCreated', privateRoom);
@@ -88,13 +96,14 @@ function init(io, redis) {
 
         socket.on('getAllUsers', async () => {
             const usersList = await redisHandler.getUsers();
+            console.log(usersList);
+            
             socket.emit('userList', usersList);
         });
 
         socket.on('createRoom', async (roomName) => {
-            const roomKey = `messages:${roomName}`;
-            if (!await redisHandler.roomExists(roomKey)) {
-                await redisHandler.saveMessage(roomName, { user: 'System', text: `Room "${roomName}" created.` });
+            const roomCreated = await redisHandler.createRoom(roomName);
+            if (roomCreated) {
                 socket.emit('roomCreated');
                 const rooms = await redisHandler.getAllRooms();
                 io.emit('roomsList', rooms);
@@ -102,7 +111,7 @@ function init(io, redis) {
                 socket.emit('message', { user: 'System', text: `Room "${roomName}" already exists.` });
             }
         });
-
+        
         socket.on('getAllRooms', async () => {
             const rooms = await redisHandler.getAllRooms();
             socket.emit('roomsList', rooms);

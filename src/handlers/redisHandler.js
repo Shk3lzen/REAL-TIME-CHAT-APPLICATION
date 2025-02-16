@@ -11,6 +11,8 @@ function subscribeToRoom(room) {
     sub.subscribe(`room:${room}`);
 }
 
+
+
 // Function to unsubscribe from room messages
 function unsubscribeFromRoom(room) {
     sub.unsubscribe(`room:${room}`);
@@ -19,8 +21,6 @@ function unsubscribeFromRoom(room) {
 // Handle messages from Redis
 sub.on('message', (channel, message) => {
     const room = channel.split(':')[1];
-    // Here, you would typically emit the message to Socket.IO rooms, 
-    // but since this is just handling Redis, we'll just log it for now
     console.log(`Received message in room: ${room}`, message);
 });
 
@@ -34,6 +34,26 @@ async function getMessages(room, page = 1) {
     const end = start + PAGE_SIZE - 1;
     const messages = await store.lrange(`messages:${room}`, start, end);
     return messages.map(JSON.parse);
+}
+
+async function isRoomMember(roomKey, username) {
+    try {
+        const members = await this.redis.smembers(`${roomKey}:members`);
+        return members.includes(username);
+    } catch (error) {
+        console.error(`Error checking room membership for ${roomKey}:`, error);
+        return false; // Return false if there's an error to avoid unauthorized access
+    }
+}
+
+
+async function createRoom(roomName) {
+    const roomKey = `messages:${roomName}`;
+    if (!await this.roomExists(roomKey)) {
+        await this.saveMessage(roomName, { user: 'System', text: `Room "${roomName}" created.` });
+        return true;
+    }
+    return false;
 }
 
 async function roomExists(roomKey) {
@@ -69,5 +89,6 @@ module.exports = {
     getUsers,
     subscribeToRoom,
     unsubscribeFromRoom,
-    roomExists
+    roomExists,
+    createRoom,
 };

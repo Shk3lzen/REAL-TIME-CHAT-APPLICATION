@@ -2,21 +2,23 @@ const socket = io();
 let currentRoom = 'main';
 let currentPage = 0;
 const pageSize = 10;
-let username = localStorage.getItem('chatUsername') || '';  // Try to get username from localStorage
+let username = '';  // Try to get username from localStorage
 
-window.onload = function() {
-    const storedUsername = localStorage.getItem('chatUsername');
-    if (storedUsername) {
-        document.getElementById('username').value = storedUsername;
-        document.getElementById('usernameDisplay').textContent = storedUsername;
-        document.getElementById('currentUser').classList.remove('d-none');
-        joinRoom('main'); // Join the main room or last known room if available
-    }
-};
+// window.onload = function() {
+//     const storedUsername = localStorage.getItem('chatUsername');
+//     if (storedUsername) {
+//         document.getElementById('username').value = storedUsername;
+//         document.getElementById('usernameDisplay').textContent = storedUsername;
+//         document.getElementById('currentUser').classList.remove('d-none');
+//         joinRoom('main'); // Join the main room or last known room if available
+//     }
+// };
 
 function startPrivateChat(targetUser) {
     const privateRoom = [username, targetUser].sort().join('_');
     currentRoom = privateRoom;
+    socket.emit('createRoom', privateRoom);  // Emit event to create room
+
 
     // Join the private room
     socket.emit('joinRoom', { username, room: privateRoom });
@@ -51,7 +53,7 @@ function joinRoom(room = 'main') {
             return alert('Please enter a username!');
         }
         username = enteredUsername;
-        localStorage.setItem('chatUsername', username); // Save username to localStorage
+        // localStorage.setItem('chatUsername', username);
     }
     
     // Update the user display in the header
@@ -63,24 +65,36 @@ function joinRoom(room = 'main') {
     currentRoom = room;
     document.getElementById('messages').innerHTML = '';
     currentPage = 0;
-    socket.emit('getAllUsers');
     document.getElementById('chat').classList.remove('d-none');
     document.getElementById('joinForm').style.display = 'none'; // Hide join form
 }
 // Function to initialize the chat state on page load
-function initChat() {
-    if (username) {
-        // If there's a stored username, directly join the chat
-        joinRoom(currentRoom);
-    } else {
-        // If no username, show the join form
-        document.getElementById('chat').classList.add('d-none');
-        document.getElementById('joinForm').style.display = 'block';
+// function initChat() {
+//     if (username) {
+//         // If there's a stored username, directly join the chat
+//         joinRoom(currentRoom);
+//     } else {
+//         // If no username, show the join form
+//         document.getElementById('chat').classList.add('d-none');
+//         document.getElementById('joinForm').style.display = 'block';
+//     }
+// }
+
+socket.on('newRoom', (roomName) => {
+    // Check if the room is not already in the list to avoid duplicates
+    const roomList = document.getElementById('roomList');
+    if (!Array.from(roomList.children).some(li => li.textContent === roomName)) {
+        const li = document.createElement('li');
+        li.textContent = roomName;
+        li.className = 'room-item text-primary mb-2';
+        li.style.cursor = 'pointer';
+        li.onclick = () => joinRoom(roomName);
+        roomList.appendChild(li);
     }
-}
+});
 
 // Call this function when the window loads
-window.onload = initChat;
+// window.onload = initChat;
 function sendMessage() {
     const message = document.getElementById('message').value;
     if (message.trim() !== '') {
@@ -95,6 +109,21 @@ function sendMessage() {
         document.getElementById('message').value = '';
     }
 }
+
+socket.on('updateUsers', (users) => {
+    const userRoom = document.getElementById('userRoom');
+    userRoom.innerHTML = '';  // Clear existing list
+    users.forEach(user => {
+        if (user !== username) {
+            const li = document.createElement('li');
+            li.textContent = user;
+            li.className = 'user-item text-primary mb-2';
+            li.style.cursor = 'pointer';
+            li.addEventListener('click', () => startPrivateChat(user));
+            userRoom.appendChild(li);
+        }
+    });
+});
 
 function showTyping() {
     socket.emit('typing');
@@ -126,7 +155,7 @@ socket.on('userList', (users) => {
 
 socket.on('roomsList', (rooms) => {
     const roomList = document.getElementById('roomList');
-    roomList.innerHTML = '';
+    roomList.innerHTML = ''; // Clear existing list
     rooms.forEach(room => {
         const li = document.createElement('li');
         li.textContent = room;
