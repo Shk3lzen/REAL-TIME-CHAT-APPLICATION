@@ -26,6 +26,12 @@ Before you start, make sure you have the following installed:
    git clone https://github.com/Shk3lzen/REAL-TIME-CHAT-APPLICATION.git
    cd REAL-TIME-CHAT-APPLICATION
 
+2. **Start the Project:**
+
+   ```bash
+   npm install express socket.io redis ioredis
+   npm run dev
+
 
 Using the Application
 Joining or Creating a Username
