@@ -30,12 +30,11 @@ Before you start, make sure you have the following installed:
 
    ```bash
       npm install express socket.io redis ioredis
-      
+
 3. **Install nodemon for npm run dev**
 
    ```bash
       npm install nodemon --save-dev
-
 
 
 Using the Application
