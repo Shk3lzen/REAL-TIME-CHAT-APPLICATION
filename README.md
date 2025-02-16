@@ -8,7 +8,6 @@ Welcome to the Real-Time Chat Application! This application allows users to join
 - [Running the Application](#running-the-application)
 - [Using the Application](#using-the-application)
 - [Implementation Decisions](#implementation-decisions)
-- [Troubleshooting](#troubleshooting)
 
 ## Prerequisites
 
