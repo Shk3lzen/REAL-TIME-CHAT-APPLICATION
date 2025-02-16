@@ -1,8 +1,20 @@
 const Redis = require('ioredis');
 
-const pub = new Redis();
-const sub = new Redis();
-const store = new Redis(); // For persistent storage
+const pub = new Redis({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+});
+
+const sub = new Redis({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+});
+
+const store = new Redis({
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+});
+  
 
 const PAGE_SIZE = 10;
 
@@ -10,8 +22,6 @@ const PAGE_SIZE = 10;
 function subscribeToRoom(room) {
     sub.subscribe(`room:${room}`);
 }
-
-
 
 // Function to unsubscribe from room messages
 function unsubscribeFromRoom(room) {
@@ -35,17 +45,6 @@ async function getMessages(room, page = 1) {
     const messages = await store.lrange(`messages:${room}`, start, end);
     return messages.map(JSON.parse);
 }
-
-async function isRoomMember(roomKey, username) {
-    try {
-        const members = await this.redis.smembers(`${roomKey}:members`);
-        return members.includes(username);
-    } catch (error) {
-        console.error(`Error checking room membership for ${roomKey}:`, error);
-        return false; // Return false if there's an error to avoid unauthorized access
-    }
-}
-
 
 async function createRoom(roomName) {
     const roomKey = `messages:${roomName}`;

@@ -15,10 +15,12 @@ let username = '';  // Try to get username from localStorage
 // };
 
 function startPrivateChat(targetUser) {
+    // Create a unique room name by sorting and joining usernames
     const privateRoom = [username, targetUser].sort().join('_');
     currentRoom = privateRoom;
-    socket.emit('createRoom', privateRoom);  // Emit event to create room
-
+    
+    // Emit event to create room on the server
+    socket.emit('createRoom', privateRoom);
 
     // Join the private room
     socket.emit('joinRoom', { username, room: privateRoom });
@@ -26,6 +28,16 @@ function startPrivateChat(targetUser) {
 
     // Request private room creation on the server
     socket.emit('requestPrivateRoom', { username, targetUser });
+
+    // Listen for messages specifically for this private room
+    socket.on('privateMessage', (data) => {
+        if (data.room === privateRoom) {
+            // Append the private message to the messages div
+            const messageElement = document.createElement('div');
+            messageElement.textContent = `${data.sender}: ${data.message}`;
+            document.getElementById('messages').appendChild(messageElement);
+        }
+    });
 }
 
 function displayMessage(msg) {

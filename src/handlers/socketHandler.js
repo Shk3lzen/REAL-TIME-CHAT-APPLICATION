@@ -68,7 +68,7 @@ function init(io, redis) {
             };
 
             await redisHandler.saveMessage(room, msg);
-            io.to(users[targetUser] || '').to(socket.id).emit('message', msg);
+            io.to(room).emit('message', msg);
         });
 
         socket.on('leaveRoom', ({ username, room }) => {
