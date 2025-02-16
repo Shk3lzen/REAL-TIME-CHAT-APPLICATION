@@ -1,0 +1,32 @@
+{
+  "name": "real-time-chat-application",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shk3lzen/REAL-TIME-CHAT-APPLICATION.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Shk3lzen/REAL-TIME-CHAT-APPLICATION/issues"
+  },
+  "homepage": "https://github.com/Shk3lzen/REAL-TIME-CHAT-APPLICATION#readme",
+  "dependencies": {
+    "express": "^4.21.2",
+    "ioredis": "^5.5.0",
+    "redis": "^4.7.0",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
